@@ -72,8 +72,21 @@ def dataframe_to_excel_bytes(dataframe: pd.DataFrame) -> bytes:
 
     export_frame = dataframe.copy()
     for column in export_frame.columns:
-        if pd.api.types.is_datetime64tz_dtype(export_frame[column]):
-            export_frame[column] = export_frame[column].dt.tz_localize(None)
+        series = export_frame[column]
+        if isinstance(series.dtype, pd.DatetimeTZDtype):
+            export_frame[column] = series.dt.tz_localize(None)
+            continue
+
+        if pd.api.types.is_object_dtype(series):
+            has_tz_values = series.map(
+                lambda value: isinstance(value, pd.Timestamp) and value.tz is not None
+            ).any()
+            if has_tz_values:
+                export_frame[column] = series.map(
+                    lambda value: value.tz_localize(None)
+                    if isinstance(value, pd.Timestamp) and value.tz is not None
+                    else value
+                )
 
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
