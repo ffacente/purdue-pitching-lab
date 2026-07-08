@@ -7,6 +7,7 @@ import os
 from urllib.parse import urlparse
 
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 from loguru import logger
 
 from config import APP_ICON, APP_TITLE, DATA_PATH, PAGE_REGISTRY, SAMPLE_DATA_PATH
@@ -62,7 +63,10 @@ def _render_page() -> None:
 def _resolve_dataset_source() -> tuple[str | None, str | None]:
     """Return dataset source and a short UI status message."""
 
-    remote_url = str(st.secrets.get("FULL_DATASET_URL", "")).strip()
+    try:
+        remote_url = str(st.secrets.get("FULL_DATASET_URL", "")).strip()
+    except StreamlitSecretNotFoundError:
+        remote_url = ""
     if not remote_url:
         remote_url = os.getenv("FULL_DATASET_URL", "").strip()
 

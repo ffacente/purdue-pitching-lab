@@ -9,10 +9,24 @@ import plotly.graph_objects as go
 from config import PURDUE_COLORS
 
 
+EXCLUDED_PITCH_TYPES = {"", "unknown", "other", "undefined"}
+
+
+def _filter_actionable_pitch_types(dataframe: pd.DataFrame) -> pd.DataFrame:
+    if dataframe.empty or "pitch_type" not in dataframe.columns:
+        return dataframe
+    return dataframe.loc[
+        ~dataframe["pitch_type"].fillna("").astype(str).str.strip().str.lower().isin(EXCLUDED_PITCH_TYPES)
+    ].copy()
+
+
 def usage_treemap(dataframe: pd.DataFrame) -> go.Figure | None:
     """Build a pitch usage treemap."""
 
     if dataframe.empty or "pitch_type" not in dataframe.columns:
+        return None
+    dataframe = _filter_actionable_pitch_types(dataframe)
+    if dataframe.empty:
         return None
     usage = dataframe["pitch_type"].value_counts().reset_index()
     usage.columns = ["pitch_type", "count"]
@@ -38,6 +52,9 @@ def movement_scatter(dataframe: pd.DataFrame) -> go.Figure | None:
     required = {"horizontal_break", "induced_vertical_break", "pitch_type"}
     if dataframe.empty or not required.issubset(dataframe.columns):
         return None
+    dataframe = _filter_actionable_pitch_types(dataframe)
+    if dataframe.empty:
+        return None
     figure = px.scatter(
         dataframe,
         x="horizontal_break",
@@ -57,8 +74,13 @@ def distribution_histogram(dataframe: pd.DataFrame, column: str, title: str) -> 
 
     if dataframe.empty or column not in dataframe.columns:
         return None
+    histogram_df = dataframe.dropna(subset=[column])
+    if "pitch_type" in histogram_df.columns:
+        histogram_df = _filter_actionable_pitch_types(histogram_df)
+    if histogram_df.empty:
+        return None
     figure = px.histogram(
-        dataframe.dropna(subset=[column]),
+        histogram_df,
         x=column,
         color="pitch_type" if "pitch_type" in dataframe.columns else None,
         barmode="overlay",

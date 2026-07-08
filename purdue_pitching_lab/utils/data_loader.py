@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import io
+import os
 import re
 from typing import Any
 from urllib.parse import urlparse
@@ -113,6 +114,10 @@ def _canonical_pitch_type(series: pd.Series) -> pd.Series:
 
     normalized = series.fillna("Unknown").astype(str).str.strip()
     token = normalized.str.lower().str.replace(r"[^a-z0-9]+", "", regex=True)
+
+    # Collapse non-actionable labels that should not appear as separate pitch types.
+    special_mask = token.str.contains("other|undefined|unknown")
+    normalized = normalized.mask(special_mask, "Unknown")
 
     # Collapse all four-seam/fastball variants into a single Fastball label.
     fastball_mask = token.str.contains("fourseam|4seam|fourseamfastball|fastball")
@@ -250,9 +255,27 @@ def load_dataset(path: str = str(DATA_PATH)) -> DatasetBundle:
                 dataframe = pd.read_parquet(io.BytesIO(response.read()))
         else:
             dataframe = pd.read_parquet(path)
+
+        duplicate_rows = int(dataframe.duplicated().sum())
+        if duplicate_rows:
+            dataframe = dataframe.drop_duplicates().copy()
+            logger.info("dropped_exact_duplicates rows_removed={} rows_remaining={}", duplicate_rows, len(dataframe))
+
         column_map, missing = discover_column_map(list(dataframe.columns))
         logger.info("dataset_loaded rows={} cols={} mapped={} missing={}", len(dataframe), len(dataframe.columns), column_map, missing)
         normalized = _standardize_dataframe(dataframe, column_map)
+
+        target_only = os.getenv("TARGET_ONLY_DATA", "true").strip().lower() in {"1", "true", "yes", "y"}
+        if target_only:
+            before_rows = len(normalized)
+            normalized = filter_target_pitchers(normalized)
+            logger.info(
+                "target_dataset_pruned enabled={} rows_before={} rows_after={}",
+                target_only,
+                before_rows,
+                len(normalized),
+            )
+
         notes = _build_notes(normalized)
         return DatasetBundle(
             dataframe=normalized,

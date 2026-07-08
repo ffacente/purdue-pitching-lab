@@ -33,6 +33,8 @@ METRIC_REGISTRY = {
     "fly_ball_pct": MetricSpec("Fly Ball %", "Fly balls divided by total balls in play", "pct"),
 }
 
+EXCLUDED_PITCH_TYPES = {"", "unknown", "other", "undefined"}
+
 
 def _safe_divide(numerator: float, denominator: float) -> float:
     return float(numerator / denominator) if denominator else 0.0
@@ -127,6 +129,11 @@ def summarize_by_group(dataframe: pd.DataFrame, group_columns: tuple[str, ...]) 
     """Aggregate metrics for each group in the dataframe."""
 
     with log_timing("summarize_by_group", group_columns=group_columns):
+        if "pitch_type" in group_columns and "pitch_type" in dataframe.columns:
+            dataframe = dataframe.loc[
+                ~dataframe["pitch_type"].fillna("").astype(str).str.strip().str.lower().isin(EXCLUDED_PITCH_TYPES)
+            ].copy()
+
         if dataframe.empty:
             return pd.DataFrame(columns=[*group_columns, *METRIC_REGISTRY.keys(), "sample_size"])
 
