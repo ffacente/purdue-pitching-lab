@@ -30,6 +30,10 @@ def _render_sidebar(health: dict[str, object]) -> None:
     page_label_map = {page_key: label for page_key, label in PAGE_REGISTRY}
     options = [page_key for page_key, _ in PAGE_REGISTRY]
 
+    # Keep the sidebar radio selection aligned when in-page buttons change active_page.
+    if st.session_state["nav_page"] != st.session_state["active_page"]:
+        st.session_state["nav_page"] = st.session_state["active_page"]
+
     selected_page = st.sidebar.radio(
         "Open module",
         options=options,
