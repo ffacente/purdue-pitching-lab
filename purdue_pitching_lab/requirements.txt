@@ -1,0 +1,12 @@
+streamlit>=1.37.0
+pandas>=2.2.2
+numpy>=1.26.4
+plotly>=5.22.0
+pyarrow>=16.1.0
+loguru>=0.7.2
+scikit-learn>=1.5.1
+fpdf2>=2.7.9
+kaleido>=0.2.1
+openpyxl>=3.1.5
+XlsxWriter>=3.2.0
+pytest>=8.2.2
