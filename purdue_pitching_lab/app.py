@@ -7,7 +7,7 @@ import importlib
 import streamlit as st
 from loguru import logger
 
-from config import APP_ICON, APP_TITLE, PAGE_REGISTRY
+from config import APP_ICON, APP_TITLE, DATA_PATH, PAGE_REGISTRY
 from utils.data_loader import dataset_health, filter_target_pitchers, load_dataset
 from utils.helpers import configure_logging, inject_theme
 
@@ -71,6 +71,15 @@ def main() -> None:
     _initialize_state()
 
     try:
+        if not DATA_PATH.exists():
+            st.error(
+                "Dataset file is missing at "
+                f"{DATA_PATH}. "
+                "This often happens on Streamlit Cloud when large parquet files are excluded from Git. "
+                "Upload a smaller sample dataset to the repository or load data from remote storage."
+            )
+            st.stop()
+
         bundle = load_dataset()
         st.session_state["dataset_bundle"] = bundle
         st.session_state["roster_df"] = filter_target_pitchers(bundle.dataframe)
