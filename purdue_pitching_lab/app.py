@@ -116,9 +116,14 @@ def main() -> None:
             logger.exception("dataset_load_failed source={} error={}", dataset_source, dataset_exc)
             can_fallback = dataset_source != str(SAMPLE_DATA_PATH) and SAMPLE_DATA_PATH.exists()
             if can_fallback:
+                error_text = str(dataset_exc).strip().replace("\n", " ")
+                if not error_text:
+                    error_text = dataset_exc.__class__.__name__
+                if len(error_text) > 220:
+                    error_text = f"{error_text[:217]}..."
                 st.warning(
                     "Full dataset could not be loaded from remote storage. "
-                    "Falling back to sample dataset."
+                    f"Falling back to sample dataset. Reason: {error_text}"
                 )
                 bundle = load_dataset(path=str(SAMPLE_DATA_PATH))
             else:
