@@ -70,6 +70,26 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+## Streamlit Cloud Deployment With Full Dataset
+
+Because large parquet files are excluded from Git, Streamlit Cloud should load the full dataset from remote storage.
+
+1. Upload your full `combined_data.parquet` to remote storage (for example S3, GCS, or a direct HTTPS file host).
+2. In Streamlit Cloud, open your app settings, then Secrets.
+3. Add this secret:
+
+```toml
+FULL_DATASET_URL = "https://<your-storage-path>/combined_data.parquet"
+```
+
+4. Reboot or redeploy the app.
+
+Behavior:
+
+- If `FULL_DATASET_URL` is set, the app uses the remote full dataset.
+- If not set and local `data/combined_data.parquet` exists, it uses local full data.
+- If full data is unavailable, it falls back to `data/combined_data_sample.parquet`.
+
 ## Application Modules
 
 - `Home`: central launch screen, pitcher search, favorites, recent views, and dataset notes

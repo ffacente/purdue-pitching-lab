@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib
+import os
+from urllib.parse import urlparse
 
 import streamlit as st
 from loguru import logger
@@ -57,6 +59,28 @@ def _render_page() -> None:
     module.render()
 
 
+def _resolve_dataset_source() -> tuple[str | None, str | None]:
+    """Return dataset source and a short UI status message."""
+
+    remote_url = str(st.secrets.get("FULL_DATASET_URL", "")).strip()
+    if not remote_url:
+        remote_url = os.getenv("FULL_DATASET_URL", "").strip()
+
+    if remote_url:
+        parsed = urlparse(remote_url)
+        if parsed.scheme in {"http", "https", "s3", "gs", "abfs"}:
+            return remote_url, "Using full dataset from remote storage."
+        logger.warning("invalid_dataset_url scheme={} value={}", parsed.scheme, remote_url)
+
+    if DATA_PATH.exists():
+        return str(DATA_PATH), None
+
+    if SAMPLE_DATA_PATH.exists():
+        return str(SAMPLE_DATA_PATH), "Full dataset not found; running with sample dataset for cloud compatibility."
+
+    return None, None
+
+
 def main() -> None:
     """Run the Streamlit application."""
 
@@ -71,24 +95,22 @@ def main() -> None:
     _initialize_state()
 
     try:
-        dataset_path = DATA_PATH
-        if not dataset_path.exists() and SAMPLE_DATA_PATH.exists():
-            dataset_path = SAMPLE_DATA_PATH
-            st.warning(
-                "Full dataset not found; running with sample dataset for cloud compatibility."
-            )
-
-        if not dataset_path.exists():
+        dataset_source, dataset_message = _resolve_dataset_source()
+        if dataset_source is None:
             st.error(
                 "Dataset file is missing at "
                 f"{DATA_PATH}. "
                 "This often happens on Streamlit Cloud when large parquet files are excluded from Git. "
-                "Upload a smaller sample dataset to the repository or load data from remote storage. "
+                "Set FULL_DATASET_URL in Streamlit Cloud Secrets for the full dataset, "
+                "or commit a smaller sample dataset. "
                 f"Expected fallback path: {SAMPLE_DATA_PATH}."
             )
             st.stop()
 
-        bundle = load_dataset(path=str(dataset_path))
+        if dataset_message:
+            st.warning(dataset_message)
+
+        bundle = load_dataset(path=dataset_source)
         st.session_state["dataset_bundle"] = bundle
         st.session_state["roster_df"] = filter_target_pitchers(bundle.dataframe)
         health = dataset_health(bundle)
