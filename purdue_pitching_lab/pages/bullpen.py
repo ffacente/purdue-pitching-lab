@@ -24,13 +24,11 @@ def render() -> None:
         st.subheader("Bullpen Scenario")
         batter_side = st.selectbox("Facing", options=["", *options.get("batter_side", [])], index=0)
         outs = st.selectbox("Outs", options=["", *options.get("outs", [])], index=0)
-        game_state = st.selectbox("Game State", options=["", *options.get("game_state", [])], index=0)
         count_group = st.selectbox("Count Group", options=["", *options.get("count_group", [])], index=0)
 
     filters = FilterState(
         batter_sides=(batter_side,) if batter_side else (),
         outs=(int(outs),) if outs else (),
-        game_states=(game_state,) if game_state else (),
         count_groups=(count_group,) if count_group else (),
     )
     ranked, unsampled = build_scenario_leaderboard(roster_df, filters)

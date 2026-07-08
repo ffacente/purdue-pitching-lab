@@ -17,6 +17,7 @@ from loguru import logger
 from config import (
     COUNT_GROUPS,
     DATA_PATH,
+    EXCLUDED_PITCHERS_NEXT_YEAR,
     TARGET_TEAM,
     TARGET_TEAM_ALIASES,
     TRANSFER_PLAYER_ALIASES,
@@ -194,6 +195,21 @@ def _transfer_pitcher_mask(dataframe: pd.DataFrame) -> pd.Series:
     return mask
 
 
+def _build_excluded_pitcher_aliases() -> set[str]:
+    aliases: set[str] = set()
+    for raw_name in EXCLUDED_PITCHERS_NEXT_YEAR:
+        clean_name = raw_name.strip()
+        if not clean_name:
+            continue
+        aliases.add(clean_name.lower())
+        parts = clean_name.split()
+        if len(parts) >= 2:
+            first = parts[0]
+            last = " ".join(parts[1:])
+            aliases.add(f"{last}, {first}".lower())
+    return aliases
+
+
 def _standardize_dataframe(dataframe: pd.DataFrame, column_map: dict[str, str]) -> pd.DataFrame:
     normalized = dataframe.copy()
     rename_map = {source: standard for standard, source in column_map.items()}
@@ -288,14 +304,26 @@ def load_dataset(path: str = str(DATA_PATH)) -> DatasetBundle:
 def filter_target_pitchers(dataframe: pd.DataFrame) -> pd.DataFrame:
     """Return only the Purdue pitcher slice."""
 
+    excluded_aliases = _build_excluded_pitcher_aliases()
+
     if "team" not in dataframe.columns:
         transfer_mask = _transfer_pitcher_mask(dataframe)
-        return dataframe.loc[transfer_mask].copy()
+        filtered = dataframe.loc[transfer_mask].copy()
+        if "pitcher" in filtered.columns and excluded_aliases:
+            filtered = filtered.loc[
+                ~filtered["pitcher"].fillna("").astype(str).str.strip().str.lower().isin(excluded_aliases)
+            ].copy()
+        return filtered
 
     target_aliases = {alias.strip().lower() for alias in TARGET_TEAM_ALIASES}
     team_mask = dataframe["team"].astype(str).str.strip().str.lower().isin(target_aliases)
     transfer_mask = _transfer_pitcher_mask(dataframe)
-    return dataframe.loc[team_mask | transfer_mask].copy()
+    filtered = dataframe.loc[team_mask | transfer_mask].copy()
+    if "pitcher" in filtered.columns and excluded_aliases:
+        filtered = filtered.loc[
+            ~filtered["pitcher"].fillna("").astype(str).str.strip().str.lower().isin(excluded_aliases)
+        ].copy()
+    return filtered
 
 
 def dataset_health(bundle: DatasetBundle) -> dict[str, Any]:

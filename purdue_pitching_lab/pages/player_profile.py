@@ -74,13 +74,11 @@ def _build_profile_filters(pitcher_df: pd.DataFrame) -> FilterState:
         st.subheader("Profile Filters")
         batter_sides = st.multiselect("Batter Side", options.get("batter_side", []), default=[])
         outs = st.multiselect("Outs", options.get("outs", []), default=[])
-        game_states = st.multiselect("Game State", options.get("game_state", []), default=[])
         count_groups = st.multiselect("Count Group", options.get("count_group", []), default=[])
         pitch_types = st.multiselect("Pitch Type", options.get("pitch_type", []), default=[])
     return FilterState(
         batter_sides=tuple(batter_sides),
         outs=tuple(int(value) for value in outs),
-        game_states=tuple(game_states),
         count_groups=tuple(count_groups),
         pitch_types=tuple(pitch_types),
     )

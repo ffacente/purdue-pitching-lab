@@ -59,6 +59,16 @@ TRANSFER_TEAM_CODE_MAP = {
     "Rice": ["RIC", "RICE", "RIC_OWL"],
 }
 
+EXCLUDED_PITCHERS_NEXT_YEAR = [
+    "Gavin Beuter",
+    "Zach Erdman",
+    "Jarvis Evans",
+    "Austin Klug",
+    "Nick Kolze",
+    "Jake Kramer",
+    "Graham Kollen",
+]
+
 COUNT_GROUPS = {
     "0-0": [(0, 0)],
     "Ahead": [(0, 1), (0, 2), (1, 2)],

@@ -7,7 +7,7 @@ import streamlit as st
 from utils.data_loader import filter_target_pitchers
 from utils.helpers import dataframe_to_excel_bytes, export_filename
 from utils.page_bootstrap import bootstrap_page
-from utils.pitch_design_engine import build_pitch_design_notes, build_pitch_design_table, compare_to_staff
+from utils.pitch_design_engine import build_pitch_design_table, compare_to_staff
 
 
 def render() -> None:
@@ -42,10 +42,6 @@ def render() -> None:
         file_name=export_filename("pitch_design", "xlsx"),
         use_container_width=True,
     )
-
-    st.subheader("Coaching Notes")
-    for note in build_pitch_design_notes(comparison):
-        st.write(f"- {note}")
 
 
 if __name__ == "__main__":
