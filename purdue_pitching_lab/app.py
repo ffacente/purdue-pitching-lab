@@ -20,6 +20,7 @@ def _initialize_state() -> None:
     st.session_state.setdefault("nav_page", st.session_state["active_page"])
     if st.session_state["nav_page"] not in valid_pages:
         st.session_state["nav_page"] = st.session_state["active_page"]
+    st.session_state.setdefault("pending_nav_page", None)
     st.session_state.setdefault("selected_pitcher", None)
     st.session_state.setdefault("favorite_pitchers", [])
     st.session_state.setdefault("recent_pitchers", [])
@@ -30,9 +31,11 @@ def _render_sidebar(health: dict[str, object]) -> None:
     page_label_map = {page_key: label for page_key, label in PAGE_REGISTRY}
     options = [page_key for page_key, _ in PAGE_REGISTRY]
 
-    # Keep the sidebar radio selection aligned when in-page buttons change active_page.
-    if st.session_state["nav_page"] != st.session_state["active_page"]:
-        st.session_state["nav_page"] = st.session_state["active_page"]
+    pending_page = st.session_state.get("pending_nav_page")
+    if pending_page in options:
+        st.session_state["nav_page"] = pending_page
+        st.session_state["active_page"] = pending_page
+        st.session_state["pending_nav_page"] = None
 
     selected_page = st.sidebar.radio(
         "Open module",

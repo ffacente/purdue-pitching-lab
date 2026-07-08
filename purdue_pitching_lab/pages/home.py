@@ -42,10 +42,10 @@ def render() -> None:
 
     button_columns = st.columns(2)
     if button_columns[0].button("Go to Player Profile", use_container_width=True):
-        st.session_state["active_page"] = "player_profile"
+        st.session_state["pending_nav_page"] = "player_profile"
         st.rerun()
     if button_columns[1].button("🚨 Open Bullpen Live Scenario Matcher", use_container_width=True):
-        st.session_state["active_page"] = "bullpen"
+        st.session_state["pending_nav_page"] = "bullpen"
         st.rerun()
 
 

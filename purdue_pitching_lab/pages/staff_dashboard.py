@@ -43,7 +43,7 @@ def render() -> None:
     for pitcher_name in sorted(roster_df["pitcher"].dropna().unique())[:12]:
         if st.button(f"Open {pitcher_name}", key=f"staff_{pitcher_name}"):
             st.session_state["selected_pitcher"] = pitcher_name
-            st.session_state["active_page"] = "player_profile"
+            st.session_state["pending_nav_page"] = "player_profile"
             st.rerun()
 
 
