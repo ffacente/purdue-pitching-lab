@@ -13,6 +13,7 @@ MIN_SAMPLE_SIZE = 5
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DATA_PATH = DATA_DIR / "combined_data.parquet"
+SAMPLE_DATA_PATH = DATA_DIR / "combined_data_sample.parquet"
 ASSETS_DIR = BASE_DIR / "assets"
 LOG_DIR = BASE_DIR / "logs"
 LOG_PATH = LOG_DIR / "app.log"
