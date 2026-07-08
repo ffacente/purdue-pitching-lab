@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import io
 import re
 from typing import Any
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 import pandas as pd
 import streamlit as st
@@ -241,7 +244,12 @@ def load_dataset(path: str = str(DATA_PATH)) -> DatasetBundle:
     """Load, normalize, and cache the source Parquet dataset."""
 
     with log_timing("load_dataset", path=path):
-        dataframe = pd.read_parquet(path)
+        parsed_path = urlparse(path)
+        if parsed_path.scheme in {"http", "https"}:
+            with urlopen(path, timeout=120) as response:  # nosec B310 - controlled by app config
+                dataframe = pd.read_parquet(io.BytesIO(response.read()))
+        else:
+            dataframe = pd.read_parquet(path)
         column_map, missing = discover_column_map(list(dataframe.columns))
         logger.info("dataset_loaded rows={} cols={} mapped={} missing={}", len(dataframe), len(dataframe.columns), column_map, missing)
         normalized = _standardize_dataframe(dataframe, column_map)

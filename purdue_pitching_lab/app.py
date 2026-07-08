@@ -110,7 +110,20 @@ def main() -> None:
         if dataset_message:
             st.warning(dataset_message)
 
-        bundle = load_dataset(path=dataset_source)
+        try:
+            bundle = load_dataset(path=dataset_source)
+        except Exception as dataset_exc:
+            logger.exception("dataset_load_failed source={} error={}", dataset_source, dataset_exc)
+            can_fallback = dataset_source != str(SAMPLE_DATA_PATH) and SAMPLE_DATA_PATH.exists()
+            if can_fallback:
+                st.warning(
+                    "Full dataset could not be loaded from remote storage. "
+                    "Falling back to sample dataset."
+                )
+                bundle = load_dataset(path=str(SAMPLE_DATA_PATH))
+            else:
+                raise
+
         st.session_state["dataset_bundle"] = bundle
         st.session_state["roster_df"] = filter_target_pitchers(bundle.dataframe)
         health = dataset_health(bundle)
