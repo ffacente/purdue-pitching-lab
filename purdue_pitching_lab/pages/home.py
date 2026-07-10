@@ -31,12 +31,18 @@ def render() -> None:
         )
         return
 
+    widget_key = "home_selected_pitcher"
+    default_pitcher = st.session_state.get("selected_pitcher")
+    if default_pitcher not in pitcher_options:
+        default_pitcher = pitcher_options[0]
+
+    if st.session_state.get(widget_key) not in pitcher_options:
+        st.session_state[widget_key] = default_pitcher
+
     selected_pitcher = st.selectbox(
         "Select a pitcher",
         options=pitcher_options,
-        index=pitcher_options.index(st.session_state.get("selected_pitcher"))
-        if st.session_state.get("selected_pitcher") in pitcher_options
-        else 0,
+        key=widget_key,
     )
     st.session_state["selected_pitcher"] = selected_pitcher
 

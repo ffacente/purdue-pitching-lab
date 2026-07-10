@@ -9,7 +9,7 @@ from models.thresholds import PITCH_CLUSTER_THRESHOLDS, PROGRAM_BENCHMARKS
 from utils.metrics import summarize_by_group
 
 
-EXCLUDED_SPECIAL_PITCH_TYPES = {"other", "undefined"}
+EXCLUDED_SPECIAL_PITCH_TYPES = {"", "unknown", "other", "undefined"}
 
 
 def _exclude_special_pitch_types(dataframe: pd.DataFrame) -> pd.DataFrame:
