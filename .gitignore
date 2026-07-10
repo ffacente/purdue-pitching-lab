@@ -16,4 +16,5 @@ logs/*.log
 # Data files too large for normal GitHub push
 *.parquet
 purdue_pitching_lab/data/*.parquet
+!purdue_pitching_lab/data/combined_data.parquet
 !purdue_pitching_lab/data/combined_data_sample.parquet
