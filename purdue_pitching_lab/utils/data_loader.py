@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
+import duckdb
 import pandas as pd
 import streamlit as st
 from loguru import logger
@@ -22,6 +23,7 @@ from config import (
     TARGET_TEAM_ALIASES,
     TRANSFER_PLAYER_ALIASES,
     TRANSFER_PLAYER_SCHOOLS,
+    TRANSFER_TEAM_CODE_MAP,
 )
 from utils.helpers import log_timing
 
@@ -184,6 +186,47 @@ def _build_notes(dataframe: pd.DataFrame) -> list[str]:
     return notes
 
 
+def _load_parquet_with_duckdb(path: str) -> pd.DataFrame:
+    """Query local parquet with DuckDB to avoid loading non-target rows into memory."""
+
+    con = duckdb.connect(database=":memory:")
+    try:
+        schema_df = con.execute("SELECT * FROM read_parquet(?) LIMIT 0", [path]).df()
+        columns = set(schema_df.columns)
+        team_column_candidates = ["PitcherTeam", "pitcher_team", "team", "Team", "school", "School"]
+        team_column = next((name for name in team_column_candidates if name in columns), None)
+        if team_column is None:
+            logger.warning("duckdb_prefilter_skipped reason=no_team_column path={}", path)
+            return pd.read_parquet(path)
+
+        target_codes = {alias.strip().upper() for alias in TARGET_TEAM_ALIASES if alias.strip()}
+        for codes in TRANSFER_TEAM_CODE_MAP.values():
+            for code in codes:
+                normalized = str(code).strip().upper()
+                if normalized:
+                    target_codes.add(normalized)
+
+        if not target_codes:
+            return pd.read_parquet(path)
+
+        value_placeholders = ", ".join(["?"] * len(target_codes))
+        query = (
+            f"SELECT * FROM read_parquet(?) "
+            f"WHERE upper(trim(CAST(\"{team_column}\" AS VARCHAR))) IN ({value_placeholders})"
+        )
+        params = [path, *sorted(target_codes)]
+        dataframe = con.execute(query, params).df()
+        logger.info(
+            "duckdb_prefilter_applied path={} team_column={} rows_loaded={}",
+            path,
+            team_column,
+            len(dataframe),
+        )
+        return dataframe
+    finally:
+        con.close()
+
+
 def _transfer_pitcher_mask(dataframe: pd.DataFrame) -> pd.Series:
     if "pitcher" not in dataframe.columns:
         return pd.Series(False, index=dataframe.index)
@@ -270,7 +313,16 @@ def load_dataset(path: str = str(DATA_PATH)) -> DatasetBundle:
             with urlopen(path, timeout=120) as response:  # nosec B310 - controlled by app config
                 dataframe = pd.read_parquet(io.BytesIO(response.read()))
         else:
-            dataframe = pd.read_parquet(path)
+            use_duckdb_prefilter = os.getenv("USE_DUCKDB_PREFILTER", "true").strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "y",
+            }
+            if use_duckdb_prefilter:
+                dataframe = _load_parquet_with_duckdb(path)
+            else:
+                dataframe = pd.read_parquet(path)
 
         duplicate_rows = int(dataframe.duplicated().sum())
         if duplicate_rows:
