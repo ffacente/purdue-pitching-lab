@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: purdue-pitching-lab
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run purdue_pitching_lab/app.py --server.port $PORT --server.address 0.0.0.0
