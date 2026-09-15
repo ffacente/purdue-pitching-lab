@@ -92,6 +92,11 @@ def compare_to_staff(summary: pd.DataFrame, pitcher_name: str) -> pd.DataFrame:
     comparison["benchmark_ivb"] = comparison["pitch_type"].map(lambda value: PROGRAM_BENCHMARKS.get(value, PROGRAM_BENCHMARKS.get("Fastball")).induced_vertical_break)
     comparison["benchmark_hb"] = comparison["pitch_type"].map(lambda value: PROGRAM_BENCHMARKS.get(value, PROGRAM_BENCHMARKS.get("Fastball")).horizontal_break)
     comparison["benchmark_spin"] = comparison["pitch_type"].map(lambda value: PROGRAM_BENCHMARKS.get(value, PROGRAM_BENCHMARKS.get("Fastball")).spin_rate)
+    # Round all float columns to one decimal place for display/export (e.g., 90.5)
+    float_cols = [c for c in comparison.columns if pd.api.types.is_float_dtype(comparison[c])]
+    if float_cols:
+        comparison[float_cols] = comparison[float_cols].round(1)
+
     return comparison
 
 
