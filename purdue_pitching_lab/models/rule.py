@@ -52,7 +52,7 @@ DEFAULT_RULES = [
         threshold=0.18,
         priority=3,
         recommendation=(
-            "Your {pitch_type} completely stymies {split_label}, holding them to a "
+            "Your {pitch_type} completely stumps {split_label}, holding them to a "
             "pristine {value:.3f} BAA. Maintain as your anchor tool."
         ),
         status="green",
