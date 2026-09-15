@@ -67,7 +67,7 @@ EXCLUDED_PITCHERS_NEXT_YEAR = [
     "Nick Kolze",
     "Jake Kramer",
     "Graham Kollen",
-    "Joe Trennery",
+    "Joe Trenerry",
 ]
 
 COUNT_GROUPS = {
