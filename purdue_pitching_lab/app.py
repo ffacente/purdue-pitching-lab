@@ -135,7 +135,7 @@ def main() -> None:
 
         st.session_state["dataset_bundle"] = bundle
         st.session_state["roster_df"] = filter_target_pitchers(bundle.dataframe)
-        health = dataset_health(bundle)
+        health = dataset_health(bundle, st.session_state["roster_df"])
         _render_sidebar(health)
         _render_page()
     except Exception as exc:  # pragma: no cover - UI guardrail

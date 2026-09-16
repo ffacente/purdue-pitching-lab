@@ -13,7 +13,7 @@ def render() -> None:
 
     bundle = st.session_state["dataset_bundle"]
     dataframe = filter_target_pitchers(bundle.dataframe)
-    health = dataset_health(bundle)
+    health = dataset_health(bundle, dataframe)
 
     st.markdown("# Purdue Pitching Lab 🚂")
     st.caption("Analytical and player development hub for Purdue pitching operations.")

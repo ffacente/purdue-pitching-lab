@@ -378,10 +378,10 @@ def filter_target_pitchers(dataframe: pd.DataFrame) -> pd.DataFrame:
     return filtered
 
 
-def dataset_health(bundle: DatasetBundle) -> dict[str, Any]:
+def dataset_health(bundle: DatasetBundle, dataframe: pd.DataFrame | None = None) -> dict[str, Any]:
     """Summarize dataset state for the UI."""
 
-    dataframe = bundle.dataframe
+    dataframe = dataframe if dataframe is not None else bundle.dataframe
     pitcher_count = dataframe["pitcher"].nunique() if "pitcher" in dataframe.columns else 0
     pitch_types = dataframe["pitch_type"].nunique() if "pitch_type" in dataframe.columns else 0
     return {
