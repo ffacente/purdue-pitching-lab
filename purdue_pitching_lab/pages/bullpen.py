@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from utils.data_loader import filter_target_pitchers
@@ -10,11 +11,23 @@ from utils.page_bootstrap import bootstrap_page
 from utils.scenario_engine import build_scenario_leaderboard
 
 
+EXCLUDED_SCENARIO_PITCHERS = {"schweizer, evan", "evan schweizer"}
+
+
+def _exclude_scenario_pitchers(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Exclude pitchers without a meaningful bullpen scenario sample."""
+
+    if "pitcher" not in dataframe.columns:
+        return dataframe.copy()
+    pitcher_names = dataframe["pitcher"].fillna("").astype(str).str.strip().str.casefold()
+    return dataframe.loc[~pitcher_names.isin(EXCLUDED_SCENARIO_PITCHERS)].copy()
+
+
 def render() -> None:
     """Render the bullpen scenario matcher page."""
 
     bundle = st.session_state["dataset_bundle"]
-    roster_df = filter_target_pitchers(bundle.dataframe)
+    roster_df = _exclude_scenario_pitchers(filter_target_pitchers(bundle.dataframe))
     options = get_filter_options(roster_df)
 
     st.title("Bullpen Live Scenario Matcher")

@@ -4,8 +4,17 @@ from __future__ import annotations
 
 import pandas as pd
 
+from pages.bullpen import _exclude_scenario_pitchers
 from utils.filters import FilterState
 from utils.scenario_engine import build_scenario_leaderboard
+
+
+def test_bullpen_scenario_excludes_schweizer_only() -> None:
+    dataframe = pd.DataFrame({"pitcher": ["Schweizer, Evan", "Other Pitcher"]})
+
+    filtered = _exclude_scenario_pitchers(dataframe)
+
+    assert list(filtered["pitcher"]) == ["Other Pitcher"]
 
 
 def test_scenario_engine_ranks_pitchers_and_separates_unsampled() -> None:
